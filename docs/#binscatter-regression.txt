@@ -1,0 +1,10 @@
+[100%] Math4DS Live NO.44 | Professor Cattaneo of Princeton--On Binscatter: https://www.youtube.com/watch?v=NbKTaIMXSnM
+[100%] binsreg github: https://github.com/nppackages/binsreg
+	https://github.com/nppackages/binsreg/blob/main/Python/binsreg_illustration.py
+	https://github.com/nppackages/binsreg/blob/main/Python/binsreg_illustration_plot.py
+[100%] binsreg python package: https://pypi.org/project/binsreg/
+
+Cattaneo_Crump_Farrell_Feng_on-binscatter (2024)
+Cattaneo_Crump_Farrell_Feng_binscatter-regressions (2025)
+Cattaneo_Crump_Farrell_Feng_nonlinear-binscatter-methods (2026)
+
