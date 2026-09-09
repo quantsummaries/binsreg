@@ -293,7 +293,65 @@ t 统计量（3.1）：`T_{ϑ,p}(x) = (ϑ̂_p(x,ŵ) − ϑ₀(x,w)) / √(Ω̂_
 2. **支撑之外的预测（Figure A.2）**：加控制后比较线性最小二乘与 Logistic QMLE。遍历 9 个控制的 min/max 组合得到 512 条分箱曲线：**最小二乘大量曲线落到 [0,1] 之外**（线性概率模型的通病），其中"小家庭、高军队比例、高 65+ 比例、高仅英语比例"地区尤甚；Logistic QMLE 天然不会越界。
 3. **不确定性可视化与目标参数（Figure A.3）**：把 10/90 分位数（灰点）与条件均值点估计（蓝点）+ 80% 置信带叠画。**均值估计的不确定性很小（带很窄），但给定 x 的结果不确定性很大**——两者含义不同：前者是推断问题（检验/决策用），后者是数据特征（离散度）。
 
-## 10 学习要点与速查
+## 10 专题 · 控制变量 w 如何体现在最终结果（尤其散点图）
+
+承接第 02、03 节：w 以部分线性指数 `θ₀(x,w) = μ₀(x) + w′γ₀` 进入 (2.1)/(2.3)。那"控制 w"到底怎么落到最终结果、尤其 binsreg 画出的散点图上？
+
+**一句话**：w 的体现 = 两个动作——① 估计时，样条 β̂ 与全局 γ̂ 在同一个损失函数里联合估计（2.3），让 μ̂(x) 成为"扣除 w 之后"的 x 净关系；② 画图时，把曲线放在评估点 ŵ 上展示：`ϑ̂(x, ŵ) = η(μ̂(x) + ŵ′γ̂)`（binsreg 默认 `at(mean)`）。
+
+**三个层面**：
+
+1. **估计层**：γ̂ 是一个**全局系数向量、跨 x 不变**；`(β̂, γ̂)` 联合一步估计，不是"先残差化再分箱"（旧 binscatter / binscatter2 的做法，一般不一致）。μ̂(x) 因此是"把 w 的线性影响拿掉之后"的 x–y 关系。
+2. **图形层（散点图）**：
+   - **点（dots）**：y 在每个箱内的均值，**原始数据、未被 w 调整**；
+   - **线（line）**：`ϑ̂(x, ŵ) = η(μ̂(x) + ŵ′γ̂)`——**形状来自 μ̂（x 净效应，不随 ŵ 变）**，**垂直位置来自 ŵ′γ̂（随 at() 移动）**；
+   - 点与线之间的**垂直缝隙 ≈ 控制变量效应**；
+   - **换 at()**：线性链接下曲线整体平移、形状不变；Logit 等非线性链接下**曲率也变**（η′ 在 index 处取值）；
+   - **ci / cb**：宽度与位置同样依赖 ŵ（第 06 节"评估点 w 影响一切"）。
+3. **推断层**：函数水平（v=0）的估计与检验依赖 ŵ；而 μ 的一阶导数 μ̂′ 在可加线性 index 模型里**与 ŵ 无关**——所以"这关系是否线性"应优先检验 v=1 导数（第 06 节 Table 1 的设定检验正是基于导数对象），避免评估点选择的误导。
+
+<div style="background:#FFFFFF;border:2px solid #8FA0F5;border-radius:12px;padding:12px 10px 8px;margin:16px 0;">
+<svg viewBox="0 0 1000 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+  <line x1="90" y1="60" x2="90" y2="330" stroke="#C9D4E8" stroke-width="1.5"/>
+  <line x1="90" y1="330" x2="900" y2="330" stroke="#C9D4E8" stroke-width="1.5"/>
+  <text x="70" y="86" fill="#3A4DA8" font-size="14" font-weight="700">结果 y</text>
+  <text x="470" y="356" fill="#3A4DA8" font-size="14" font-weight="700">收入 x</text>
+  <circle cx="150" cy="200" r="6" fill="#6B7A8A"/>
+  <circle cx="220" cy="170" r="6" fill="#6B7A8A"/>
+  <circle cx="290" cy="152" r="6" fill="#6B7A8A"/>
+  <circle cx="360" cy="165" r="6" fill="#6B7A8A"/>
+  <circle cx="430" cy="185" r="6" fill="#6B7A8A"/>
+  <circle cx="500" cy="215" r="6" fill="#6B7A8A"/>
+  <circle cx="570" cy="242" r="6" fill="#6B7A8A"/>
+  <circle cx="640" cy="252" r="6" fill="#6B7A8A"/>
+  <circle cx="710" cy="238" r="6" fill="#6B7A8A"/>
+  <circle cx="780" cy="222" r="6" fill="#6B7A8A"/>
+  <circle cx="850" cy="208" r="6" fill="#6B7A8A"/>
+  <path d="M150,245 C210,235 260,215 310,212 C380,215 440,245 500,272 C580,300 650,300 700,282 C760,262 810,250 850,244" fill="none" stroke="#8FA0F5" stroke-width="4"/>
+  <path d="M150,215 C210,205 260,185 310,182 C380,185 440,215 500,242 C580,270 650,270 700,252 C760,232 810,220 850,214" fill="none" stroke="#B9C6F2" stroke-width="3" stroke-dasharray="10 7"/>
+  <line x1="500" y1="220" x2="500" y2="266" stroke="#EA6668" stroke-width="2"/>
+  <polygon points="500,220 495,230 505,230" fill="#EA6668"/>
+  <polygon points="500,266 495,256 505,256" fill="#EA6668"/>
+  <text x="512" y="246" fill="#EA6668" font-size="13" font-weight="700">线-点缝隙 ≈ 控制变量效应</text>
+  <text x="632" y="316" fill="#8FA0F5" font-size="13" font-weight="700">ϑ̂(x, ŵ=mean) 调整曲线</text>
+  <text x="632" y="336" fill="#B9C6F2" font-size="12.5">换 at() → 整体平移（线性链接）</text>
+  <text x="632" y="200" fill="#6B7A8A" font-size="12.5">y 的分箱均值（原始，未调整）</text>
+  <rect x="60" y="380" width="880" height="60" rx="10" fill="#DCE7FF" stroke="#8FA0F5" stroke-width="1.5"/>
+  <text x="500" y="404" text-anchor="middle" fill="#1C2733" font-size="13" font-weight="700">形状 ← μ̂(x)（x 净效应，不随 ŵ 变）｜ 水平位置 ← ŵ′γ̂（随 at() 移动）｜ 置信带宽度与位置 ← 也依赖 ŵ</text>
+  <text x="500" y="426" text-anchor="middle" fill="#3A4DA8" font-size="12.5">Logit 等非线性链接下，换 ŵ 曲率也会变（η′ 在 index 处取值）→ 检验线性优先用一阶导数 v=1</text>
+</svg>
+<div style="font-size:12px;color:#6B7A8A;text-align:center;margin-top:6px;">图 C｜binsreg 散点图解剖：原始分箱点 + 调整曲线 + 评估点平移（依据论文内容自绘，示意，非真实数据）</div>
+</div>
+
+**自查三题**：
+
+1. binsreg 散点图里的点是"控制变量调整后的数据点"还是"原始分箱均值"？
+2. `at(mean)` 换成 `at(median)`：曲线形状变吗？水平变吗？Logit 模型下呢？
+3. 为什么检验"是不是线性"推荐用一阶导数 v=1 而非水平值？
+
+答案：① 原始分箱均值，未调整；② 线性链接下形状不变、水平平移，Logit 下曲率也变，且置信带宽度与位置都变；③ 水平检验受评估点 ŵ 影响，而 μ̂′ 的形状与评估点无关，结论更稳健。
+
+## 11 学习要点与速查
 
 ### 避坑清单
 

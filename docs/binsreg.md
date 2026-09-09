@@ -82,7 +82,7 @@ binsreg(
 
 ### Plotting controls
 
-- `dots`: binscatter dots specification. Typical usage is `dots=(p, s)`, where `p` is the polynomial degree and `s` is the smoothness constraint. If `dots=True`, a default binscatter is used.
+- `dots`: binscatter dots specification. Typical usage is `dots=(p, s)`, where `p` is the polynomial degree and `s` is the smoothness constraint. The `dots=(p, s)` option chooses the polynomial form used for the fitted binscatter estimate over `x`: `x` is the variable being binned and evaluated, while `y` is the variable being estimated/conditioned on. So `dots` is about modeling `E[y | x, w]` (or a local polynomial approximation to it). If `dots=True`, a default binscatter is used.
 - `dotsgrid`: number of evaluation points per bin for plotting dots.
 - `dotsgridmean`: whether to include the bin-mean evaluation point in the plotted dots.
 - `line`: line overlay specification, used for a smoothed fitted line. The syntax is `line=(p, s)`, where `p` is the polynomial degree and `s` is the smoothness constraint. This is not a global linear model; it fits a piecewise polynomial over the bins. For example, `line=(3, 3)` fits a cubic piecewise polynomial with smoothness 3 across the bins, which can appear nonlinear. A linear overlay would use `line=(1, 1)` or `line=(0, 0)` depending on the desired smoothness.

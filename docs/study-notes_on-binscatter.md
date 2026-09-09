@@ -255,7 +255,65 @@ binscatter 的构造直觉很简单：把 x 的支撑切成 J 个箱（经济学
 - **多维 x**：全部结果可推广到 dim(x) > 1，重要应用是热图（heat map）。
 - **一般分箱方案**：理论覆盖等距分箱、经济含义分箱（如收入区间）等，不限于分位数。
 
-## 09 学习要点与速查
+## 09 专题 · 控制变量 w 如何体现在最终结果（尤其散点图）
+
+承接第 03 节：正确的协变量调整是部分线性模型 `E[y|x,w] = μ₀(x) + w′γ₀`。那"控制 w"到底怎么落到最终结果、尤其 binsreg 画出的散点图上？
+
+**一句话**：w 的体现 = 两个动作——① 估计时，样条 β̂ 与全局 γ̂ 放在同一个目标函数里联合估计（公式 3），让 μ̂(x) 成为"扣除 w 之后"的 x 净关系；② 画图时，把曲线放在评估点 w̄ 上展示：`Υ̂(x) = μ̂(x) + w̄′γ̂`（公式 6，binsreg 默认 w̄ = 样本均值，即 `at(mean)`）。
+
+**三个层面**：
+
+1. **估计层**：γ̂ 是一个**全局系数向量、跨 x 不变**；`(β̂, γ̂)` 联合一步估计，不是旧工具"先残差化再分箱"（那个一般不一致，见 03 节）。μ̂(x) 因此是"把 w 的线性影响拿掉之后"的 x–y 关系。
+2. **图形层（散点图）**：
+   - **点（dots）**：y 在每个箱内的均值，**原始数据、未被 w 调整**；
+   - **线（line）**：`Υ̂(x) = μ̂(x) + w̄′γ̂`——**形状来自 μ̂（x 净效应，不随评估点变）**，**垂直位置来自 w̄′γ̂（随 at() 移动）**；
+   - 点与线之间的**垂直缝隙 ≈ 控制变量效应**；
+   - **换 at()**：线性链接下曲线整体平移、形状不变；Logit 等非线性链接下曲率也变；
+   - **ci / cb**：宽度与位置同样依赖评估点 w̄。
+3. **推断层**：函数水平（v=0）的估计与检验依赖 w̄；而 μ 的一阶导数 μ̂′ 在可加线性 index 模型里**与 w̄ 无关**——所以"这关系是否线性"应优先检验 v=1 导数，避免评估点选择的误导。
+
+<div style="background:#FFFFFF;border:2px solid #8FA0F5;border-radius:12px;padding:12px 10px 8px;margin:16px 0;">
+<svg viewBox="0 0 1000 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+  <line x1="90" y1="60" x2="90" y2="330" stroke="#C9D4E8" stroke-width="1.5"/>
+  <line x1="90" y1="330" x2="900" y2="330" stroke="#C9D4E8" stroke-width="1.5"/>
+  <text x="70" y="86" fill="#3A4DA8" font-size="14" font-weight="700">结果 y</text>
+  <text x="470" y="356" fill="#3A4DA8" font-size="14" font-weight="700">收入 x</text>
+  <circle cx="150" cy="200" r="6" fill="#6B7A8A"/>
+  <circle cx="220" cy="170" r="6" fill="#6B7A8A"/>
+  <circle cx="290" cy="152" r="6" fill="#6B7A8A"/>
+  <circle cx="360" cy="165" r="6" fill="#6B7A8A"/>
+  <circle cx="430" cy="185" r="6" fill="#6B7A8A"/>
+  <circle cx="500" cy="215" r="6" fill="#6B7A8A"/>
+  <circle cx="570" cy="242" r="6" fill="#6B7A8A"/>
+  <circle cx="640" cy="252" r="6" fill="#6B7A8A"/>
+  <circle cx="710" cy="238" r="6" fill="#6B7A8A"/>
+  <circle cx="780" cy="222" r="6" fill="#6B7A8A"/>
+  <circle cx="850" cy="208" r="6" fill="#6B7A8A"/>
+  <path d="M150,245 C210,235 260,215 310,212 C380,215 440,245 500,272 C580,300 650,300 700,282 C760,262 810,250 850,244" fill="none" stroke="#8FA0F5" stroke-width="4"/>
+  <path d="M150,215 C210,205 260,185 310,182 C380,185 440,215 500,242 C580,270 650,270 700,252 C760,232 810,220 850,214" fill="none" stroke="#B9C6F2" stroke-width="3" stroke-dasharray="10 7"/>
+  <line x1="500" y1="220" x2="500" y2="266" stroke="#EA6668" stroke-width="2"/>
+  <polygon points="500,220 495,230 505,230" fill="#EA6668"/>
+  <polygon points="500,266 495,256 505,256" fill="#EA6668"/>
+  <text x="512" y="246" fill="#EA6668" font-size="13" font-weight="700">线-点缝隙 ≈ 控制变量效应</text>
+  <text x="632" y="316" fill="#8FA0F5" font-size="13" font-weight="700">Υ̂(x) = μ̂(x) + w̄′γ̂ 调整曲线</text>
+  <text x="632" y="336" fill="#B9C6F2" font-size="12.5">换 at() → 整体平移（线性链接）</text>
+  <text x="632" y="200" fill="#6B7A8A" font-size="12.5">y 的分箱均值（原始，未调整）</text>
+  <rect x="60" y="380" width="880" height="60" rx="10" fill="#DCE7FF" stroke="#8FA0F5" stroke-width="1.5"/>
+  <text x="500" y="404" text-anchor="middle" fill="#1C2733" font-size="13" font-weight="700">形状 ← μ̂(x)（x 净效应，不随评估点变）｜ 水平位置 ← w̄′γ̂（随 at() 移动）｜ 置信带宽度与位置 ← 也依赖 w̄</text>
+  <text x="500" y="426" text-anchor="middle" fill="#3A4DA8" font-size="12.5">默认 w̄ = E[w]（部分均值，公式 6）；检验"是否线性"优先用一阶导数 v=1（水平 v=0 受评估点影响）</text>
+</svg>
+<div style="font-size:12px;color:#6B7A8A;text-align:center;margin-top:6px;">图 C｜binscatter 散点图解剖：原始分箱点 + 调整曲线 + 评估点平移（依据论文内容自绘，示意，非真实数据）</div>
+</div>
+
+**自查三题**：
+
+1. binsreg 散点图里的点是"控制变量调整后的数据点"还是"原始分箱均值"？
+2. `at(mean)` 换成 `at(median)`：曲线形状变吗？水平变吗？Logit 模型下呢？
+3. 为什么检验"是不是线性"推荐用一阶导数 v=1 而非水平值？
+
+答案：① 原始分箱均值，未调整；② 线性链接下形状不变、水平平移，Logit 下曲率也变，且置信带宽度与位置都变；③ 水平检验受评估点 w̄ 影响，而 μ̂′ 的形状与评估点无关，结论更稳健。
+
+## 10 学习要点与速查
 
 ### 避坑清单（看完就记住这六条）
 
